@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>snowfall</title>
+
+  <style>
+    html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    }
+
+    body {
+    background-color: #000;
+    }
+
+    #canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 600px;
+    height: 400px;
+    margin-top: -200px;
+    margin-left: -300px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="600" height="400"></canvas>
+
+<script type="text/javascript">
+
+var canvas = document.getElementById("canvas");
+var context = canvas.getContext("2d");
+var canvasWidth = 600;
+var canvasHeight = 400;
+var canvasDepth = 320;
+var canvasWidthHalf = canvasWidth / 2;
+var canvasHeightHalf = canvasHeight / 2;
+var canvasDepthHalf = canvasDepth / 2;
+var gravity = 1;
+var margin = 8;
+var fluctuation = 0.3;
+
+window.onload = function() {
+};
+
+var Crystal = function() {
+this.init();
+};
+
+Crystal.prototype.init = function() {
+this.x = (Math.random() * canvasWidth);
+this.y = -((Math.random() * canvasHeight) + margin);
+this.z = (Math.random() * canvasDepth) * 3;
+this.vx = (Math.random() - 0.5) * fluctuation;
+this.vy = (Math.random() - 0.5) * fluctuation + gravity;
+this.vz = (Math.random() - 0.5) * fluctuation;
+};
+
+Crystal.prototype.update = function() {
+this.x += this.vx;
+this.y += this.vy;
+this.z += this.vz;
+if (canvasHeight + margin < this.y) {
+this.init();
+}
+};
+
+Crystal.prototype.draw = function() {
+var cx = (this.x - canvasWidthHalf) * (320 / (30 + this.z)) + canvasWidthHalf;
+var cy = (this.y - 200) * (320 / (30 + this.z)) + 200;
+var cs = 360 / (2 + this.z);
+if (0 < cs) {
+context.fillStyle = "rgb(255, 255, 255)";
+context.globalAlpha = Math.max(0.0, (1.2 - (this.z / canvasDepth) * 0.5 - Math.pow(cs, 4) / 1024));
+context.beginPath();
+context.arc(cx, cy, cs, 0, 2 * Math.PI);
+context.fill();
+context.closePath();
+}
+};
+
+var fps = 0;
+var time = new Date().getTime();
+var frameCount = 0;
+var showFps = false;
+
+var frontCrystals = [];
+for (var i = 0; i < 1000; ++i)
+frontCrystals.push(new Crystal());
+
+window.setInterval(function() {
+var now = new Date().getTime();
+if (1000 < now - time) {
+fps = frameCount * 1000 / (now - time);
+frameCount = 0;
+time = now;
+}
+frameCount++;
+
+for (var i = 0; i < frontCrystals.length; ++i)
+frontCrystals[i].update();
+
+context.fillStyle = "#6767D5";
+context.globalAlpha = 1;
+context.fillRect(0, 0, canvasWidth, canvasHeight);
+
+context.fillStyle = "#fff";
+var ground = canvasHeight * 0.8;
+//context.fillRect(0, ground, canvasWidth, canvasHeight - 300);
+context.beginPath();
+context.moveTo(0, ground);
+
+context.lineTo(canvasWidth * 0.4, ground);
+context.lineTo(canvasWidth * 0.5, ground - (canvasWidth * 0.1));
+context.lineTo(canvasWidth * 0.57, ground - (canvasWidth * 0.03));
+context.lineTo(canvasWidth * 0.74, ground - (canvasWidth * 0.20));
+context.lineTo(canvasWidth * 0.94, ground);
+
+context.lineTo(canvasWidth, ground);
+context.lineTo(canvasWidth, canvasHeight);
+context.lineTo(0, canvasHeight);
+context.fill();
+context.closePath();
+
+for (var i = 0; i < frontCrystals.length; ++i)
+frontCrystals[i].draw();
+
+if (showFps) {
+context.globalAlpha = 0.9;
+context.fillStyle = "#fff";
+context.font = "14px sans-serif";
+context.fillText(("" + fps).substr(0, 5) + " fps", 6, 16);
+}
+}, 1000 / 60);
+
+canvas.onclick = function(e) {
+showFps = !showFps;
+e.preventDefault();
+}
+
+</script>
+</body>
+</html>
